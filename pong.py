@@ -1,5 +1,7 @@
 import pygame, random, sys
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH, PONG_SOUND, SCORE_SOUND, FONT, GREY, LIGHT_GREY
+from utils import *
+import math
 
 
 class PongGame:
@@ -20,8 +22,8 @@ class PongGame:
 
         angle = random.randrange(360)
 
-        self.ball_velocity_y = 7 * random.choice((1, -1))
-        self.ball_velocity_x = 7 * random.choice((1, -1))
+        self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
+        print(self.ball_velocity_x, self.ball_velocity_y)
 
         self.player_speed = 0
         self.opponent_speed = 7
@@ -42,14 +44,14 @@ class PongGame:
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP: 
-                    self.player_speed -= 7
+                    self.player_speed = -7
                 if event.key == pygame.K_DOWN:
-                    self.player_speed += 7
+                    self.player_speed = 7
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_UP:
-                    self.player_speed += 7
+                    self.player_speed = 0
                 if event.key == pygame.K_DOWN:
-                    self.player_speed -= 7
+                    self.player_speed = 0
 
     def ball_animation(self):
         self.ball.x += self.ball_velocity_x
@@ -74,6 +76,10 @@ class PongGame:
         if self.ball.colliderect(self.player) or self.ball.colliderect(self.opponent):
             pygame.mixer.Sound.play(PONG_SOUND)
             self.ball_velocity_x *= -1
+            if self.ball.colliderect(self.player):
+                self.ball_velocity_y *= (1 + 0.25 * abs(self.player_speed))
+            else:
+                self.ball_velocity_y *= (1 + 0.25 * abs(self.opponent_speed))
 
     def player_animation(self):
         self.player.y += self.player_speed
@@ -111,8 +117,8 @@ class PongGame:
         if current_time - self.score_time <= 2100:
             self.ball_velocity_x = self.ball_velocity_y = 0
         else:
-            self.ball_velocity_y = 7 * random.choice((1, -1))
-            self.ball_velocity_x = 7 * random.choice((1, -1))
+            angle = random.randrange(360)
+            self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
             self.score_time = None
 
     def update(self):
