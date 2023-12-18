@@ -21,9 +21,7 @@ class PongGame:
         self.opponent = pygame.Rect(10, self.screen_h/2 - 70, 10, 140)
 
         angle = random.randrange(360)
-
         self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
-        print(self.ball_velocity_x, self.ball_velocity_y)
 
         self.player_speed = 0
         self.opponent_speed = 7

@@ -16,4 +16,11 @@ def play():
 
         game.update()
 
+        if game.gameOver():
+            break
+
+    print('Final Score: ' + game.player_score + ':' + game.opponent_score)
+
+    pygame.quit()
+
 play()
