@@ -2,6 +2,8 @@ import pygame, random, sys
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH, PONG_SOUND, SCORE_SOUND, FONT, GREY, LIGHT_GREY
 from utils import *
 
+SPEED = 2000
+
 class PongGameAI:
     def __init__(self, w=SCREEN_WIDTH, h = SCREEN_HEIGHT):
         self.screen = pygame.display.set_mode((w, h))
@@ -18,11 +20,13 @@ class PongGameAI:
         self.player = pygame.Rect(self.screen_w - 20, self.screen_h/2 - 70, 10, 140)
         self.opponent = pygame.Rect(10, self.screen_h/2 - 70, 10, 140)
 
-        angle = random.randrange(360)
+        angle = random.randrange(-45, 135)
+        if angle > 45:
+            angle += 90
         self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
 
         self.player_speed = 7
-        self.opponent_speed = 7
+        self.opponent_speed = 14
 
         self.player_score = 0
         self.opponent_score = 0
@@ -45,22 +49,21 @@ class PongGameAI:
 
         #check game over
         game_over = False
-        if (self.opponent_score == 11):
+        if (self.opponent_score == 5):
                 game_over = True
                 reward = -100
-                return reward, game_over, self.player_score
+                return reward, game_over, self.player_score - self.opponent_score
         
         if (self.ball.colliderect(self.player)):
             reward = 2
 
-        if (self.player_score == 11):
-            reward = 15
+        if (self.player_score == 5):
+            reward = 20
 
         # update ui and clock
         self._update()
-        self.clock.tick(60)
 
-        return reward, game_over, self.score
+        return reward, game_over, self.player_score - self.opponent_score
 
 
     def ball_animation(self):
@@ -134,13 +137,15 @@ class PongGameAI:
         if current_time - self.score_time <= 2100:
             self.ball_velocity_x = self.ball_velocity_y = 0
         else:
-            angle = random.randrange(360)
+            angle = random.randrange(-45, 135)
+            if angle > 45:
+                angle += 90
             self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
+            print(self.ball_velocity_x, self.ball_velocity_y)
             self.score_time = None
 
     def _update(self):
         self.ball_animation()
-        self.player_animation()
         self.opponent_animation()
 
         self.screen.fill(GREY)
@@ -159,7 +164,7 @@ class PongGameAI:
         self.screen.blit(opponent_text,(600,470))
 
         pygame.display.flip()
-        self.clock.tick(60)
+        self.clock.tick(SPEED)
 
 
             
