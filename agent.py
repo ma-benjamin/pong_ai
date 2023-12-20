@@ -22,19 +22,24 @@ class Agent:
 
 
     def get_state(self, game):
-        player_pos_x = game.player.x
-        player_pos_y = game.player.y
-        opponent_pos_x = game.opponent.x
-        opponent_pos_y = game.opponent.y
+        player_pos = game.player.y
+        opponent_pos = game.opponent.y
         ball_position_x = game.ball.x
         ball_position_y = game.ball.y
         ball_velocity_x = game.ball_velocity_x
         ball_velocity_y = game.ball_velocity_y
+        height_distance_from_ball = 0
+        if (game.player.top > game.ball.bottom):
+            height_distance_from_ball = game.ball.bottom - game.player.top
+        elif (game.player.bottom < game.ball.top):
+            height_distance_from_ball = game.ball.top - game.player.bottom
+        horizontal_distance_from_ball = game.player.left - game.ball.right
+
         state = [
-            player_pos_x,
-            player_pos_y,
-            opponent_pos_x,
-            opponent_pos_y,
+            player_pos,
+            opponent_pos,
+            height_distance_from_ball,
+            horizontal_distance_from_ball,
             ball_position_x,
             ball_position_y,
             ball_velocity_x,
@@ -76,7 +81,7 @@ def train():
     plot_scores = []
     plot_mean_scores = []
     total_score = 0
-    record = 0
+    record = -10
     agent = Agent()
     game = PongGameAI()
     while True:

@@ -2,7 +2,7 @@ import pygame, random, sys
 from constants import SCREEN_HEIGHT, SCREEN_WIDTH, PONG_SOUND, SCORE_SOUND, FONT, GREY, LIGHT_GREY
 from utils import *
 
-SPEED = 2000
+SPEED = 5000
 
 class PongGameAI:
     def __init__(self, w=SCREEN_WIDTH, h = SCREEN_HEIGHT):
@@ -20,13 +20,13 @@ class PongGameAI:
         self.player = pygame.Rect(self.screen_w - 20, self.screen_h/2 - 70, 10, 140)
         self.opponent = pygame.Rect(10, self.screen_h/2 - 70, 10, 140)
 
-        angle = random.randrange(-45, 135)
-        if angle > 45:
-            angle += 90
+        angle = random.randrange(-25, 75)
+        if angle > 25:
+            angle += 130
         self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
 
         self.player_speed = 7
-        self.opponent_speed = 14
+        self.opponent_speed = 10
 
         self.player_score = 0
         self.opponent_score = 0
@@ -49,7 +49,7 @@ class PongGameAI:
 
         #check game over
         game_over = False
-        if (self.opponent_score == 5):
+        if (self.opponent_score == 5 or self.frame_iteration > 10000):
                 game_over = True
                 reward = -100
                 return reward, game_over, self.player_score - self.opponent_score
@@ -58,7 +58,8 @@ class PongGameAI:
             reward = 2
 
         if (self.player_score == 5):
-            reward = 20
+            game_over = True
+            reward = 40
 
         # update ui and clock
         self._update()
@@ -71,28 +72,42 @@ class PongGameAI:
         self.ball.y += self.ball_velocity_y
 
         if self.ball.top <= 0 or self.ball.bottom >= SCREEN_HEIGHT:
-            pygame.mixer.Sound.play(PONG_SOUND)
+            # pygame.mixer.Sound.play(PONG_SOUND)
             self.ball_velocity_y *= -1
 
         # Player Score
         if self.ball.left <= 0:
-            pygame.mixer.Sound.play(SCORE_SOUND)
+            # pygame.mixer.Sound.play(SCORE_SOUND)
             self.player_score += 1
             self.score_time = pygame.time.get_ticks()
 
         # Opponent Score
         if self.ball.right >= SCREEN_WIDTH:
-            pygame.mixer.Sound.play(SCORE_SOUND)
+            # pygame.mixer.Sound.play(SCORE_SOUND)
             self.opponent_score += 1
             self.score_time = pygame.time.get_ticks()
 
-        if self.ball.colliderect(self.player) or self.ball.colliderect(self.opponent):
-            pygame.mixer.Sound.play(PONG_SOUND)
-            self.ball_velocity_x *= -1
-            if self.ball.colliderect(self.player):
-                self.ball_velocity_y *= (1 + 0.25 * abs(self.player_speed))
-            else:
-                self.ball_velocity_y *= (1 + 0.25 * abs(self.opponent_speed))
+        if self.ball.colliderect(self.player) and self.ball_velocity_x > 0:
+            if (self.ball.bottom < self.player.top):
+                pass
+            # pygame.mixer.Sound.play(PONG_SOUND)
+            if abs(self.ball.right < self.player.left) < 10:
+                self.ball_velocity_x *= -1
+            elif abs(self.ball.bottom - self.player.top) < 10 and self.ball_velocity_y > 0:
+                self.ball_velocity_y *= -1
+            elif abs(self.ball.top - self.player.bottom) < 10 and self.ball_velocity_y < 0:
+                self.ball_velocity_y *= -1
+            self.ball_velocity_y *= (1 + 0.1 * abs(self.player_speed))
+
+        if self.ball.colliderect(self.opponent) and self.ball_velocity_x < 0:
+            # pygame.mixer.Sound.play(PONG_SOUND)
+            if abs(self.ball.right < self.opponent.left) < 10:
+                self.ball_velocity_x *= -1
+            elif abs(self.ball.bottom - self.opponent.top) < 10 and self.ball_velocity_y > 0:
+                self.ball_velocity_y *= -1
+            elif abs(self.ball.top - self.opponent.bottom) < 10 and self.ball_velocity_y < 0:
+                self.ball_velocity_y *= -1
+            self.ball_velocity_y *= (1 + 0.1 * abs(self.opponent_speed))
 
     def _move(self, action):
         # [up, down, nothing]
@@ -110,9 +125,9 @@ class PongGameAI:
             self.player.bottom = self.screen_h
             
     def opponent_animation(self):
-        if self.opponent.top < self.ball.y:
+        if self.opponent.top < self.ball.top:
             self.opponent.y += self.opponent_speed
-        if self.opponent.bottom > self.ball.y:
+        if self.opponent.bottom > self.ball.bottom:
             self.opponent.y -= self.opponent_speed
 
         if self.opponent.top <= 0:
@@ -137,11 +152,10 @@ class PongGameAI:
         if current_time - self.score_time <= 2100:
             self.ball_velocity_x = self.ball_velocity_y = 0
         else:
-            angle = random.randrange(-45, 135)
-            if angle > 45:
-                angle += 90
+            angle = random.randrange(-25, 75)
+            if angle > 25:
+                angle += 130
             self.ball_velocity_x, self.ball_velocity_y = directionComponents(angle)
-            print(self.ball_velocity_x, self.ball_velocity_y)
             self.score_time = None
 
     def _update(self):
